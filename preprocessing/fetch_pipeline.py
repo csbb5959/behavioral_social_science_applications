@@ -4,16 +4,7 @@ import pandas as pd
 import numpy as np
 import hashlib
 
-DATABASE_PATH = "data/podcastindex_feeds.db"
-TABLE = "podcasts"
-YEARS = [2022, 2023, 2024, 2025, 2026]
-filters = {"language": ["en", "en-us"], 
-               "category1": ["games", "science"], 
-               "category2": ["hobbies", "medicine"], 
-               "category3": ["video games", "education"],
-               "newestItemPubdate": [2026],
-               "oldestItemPubdate": [2018],
-               "dead": ["0"]}
+YEARS = [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026]
 MIN_PODCAST_LEN_MINUTES = 15
 SEED = 23
 
@@ -48,8 +39,8 @@ class FetchPipeline():
         df = self.__sort(df)
         return df
 
-    def __select(self, df: pd.DataFrame, k: int) -> pd.DataFrame:
-        return df.groupby(["feed_url", "year"]).head(k)
+    def select(self, df: pd.DataFrame, k: int) -> pd.DataFrame:
+            return df.groupby(["feed_url", "year"]).head(k)
 
     def __sort(self, df: pd.DataFrame) -> pd.DataFrame:
         return df.sort_values(by=["podcast_hash", "episode_year", "episode_hash"])
