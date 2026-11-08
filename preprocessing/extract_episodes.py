@@ -30,7 +30,7 @@ class EpisodeFetcher():
             secs = 0
             for part in raw.split(":"):   # "1:02:03" -> 3723, "45:30" -> 2730, "3600" -> 3600
                 secs = secs * 60 + int(float(part))
-            return secs or None           # 0 wird zu None
-        except (AttributeError, ValueError):   # None oder kein Zahlenformat
+            return secs or None           # 0 becomes None
+        except (AttributeError, ValueError):   # None or not a number
             return None
 

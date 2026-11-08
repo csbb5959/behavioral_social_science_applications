@@ -38,9 +38,6 @@ class FetchPipeline():
         df = self.__sort(df)
         return df
 
-    def select(self, df: pd.DataFrame, k: int) -> pd.DataFrame:
-            return df.groupby(["feed_url", "episode_year"]).head(k)
-
     def __sort(self, df: pd.DataFrame) -> pd.DataFrame:
         return df.sort_values(by=["podcast_hash", "episode_year", "episode_hash"])
 
