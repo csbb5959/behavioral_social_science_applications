@@ -45,5 +45,6 @@ class ProcessingPipeline():
         first_last = df[df["episode_year"].isin(years)] # only episodes from desired years
         return first_last.groupby(["feed_url", "episode_year"]).head(k_test)
 
-    def transcribe(self, df: pd.DataFrame, )
+    def run_transcription(self, df: pd.DataFrame):
+        pass
         

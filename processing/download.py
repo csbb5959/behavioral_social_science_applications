@@ -33,7 +33,7 @@ class EpisodeDownloader:
         for attempt in range(1, MAX_ATTEMPTS + 1):
             err = self.__run_ffmpeg(url, out)
             if err is None:
-                logging.info(f"OK {episode_hash}")
+                logging.info(f"Download OK: {episode_hash}")
                 return episode_hash, True, str(out), None
             if attempt == MAX_ATTEMPTS or not self.__is_transient(err):
                 break
@@ -58,6 +58,9 @@ class EpisodeDownloader:
 
         except subprocess.CalledProcessError as e:
             err = (e.stderr or "").strip()[-300:] or f"ffmpeg exit {e.returncode}"
+
+        except FileNotFoundError as e:
+            err = e.filename
 
         except Exception as e:
             err = repr(e)
