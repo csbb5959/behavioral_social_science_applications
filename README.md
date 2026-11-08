@@ -1,5 +1,25 @@
 # Behavioral Social Sciences Applications Project
 
+## Quick Start
+
+**Requirements:** conda ([Miniforge](https://github.com/conda-forge/miniforge) or [Anaconda](https://www.anaconda.com/download)), a [Deepgram](https://deepgram.com) API key, and the [PodcastIndex](https://podcastindex.org) database dump (~5 GB).
+
+```bash
+conda env create -f environment.yml    # Python 3.13, ffmpeg, all packages
+conda activate bssa_project
+
+cp .env.example .env                   # add your DEEPGRAM_API_KEY
+```
+
+With Anaconda Navigator, you can instead import `environment.yml` under *Environments → Import*.
+
+Place the extracted dump at `data/podcastindex_feeds.db`.
+
+**Run:** open `processing/test.ipynb`, select the `bssa_project` kernel, and run all cells. This filters candidate podcasts, builds the ranked episode table, then downloads and transcribes one test episode (audio → `downloads/`, transcripts → `transcriptions/`).
+
+Notebooks must run with their own folder as working directory (VS Code default), since paths like `../data/` are relative. The full screening loop (`processing/processing_pipeline.py`) is work in progress.
+
+----------------------------
 
 ## General Idea
 

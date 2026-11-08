@@ -1,0 +1,13 @@
+name: bssa_project
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.13
+  - ffmpeg=5.1.0
+  - pandas=3.1.0
+  - numpy=2.5.4
+  - feedparser=6.0.14
+  - python-dotenv=1.2.4
+  - deepgram-sdk=7.17.0
+  - ipykernel=7.4.0  # run the notebooks
