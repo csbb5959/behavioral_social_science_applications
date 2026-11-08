@@ -1,5 +1,4 @@
 import feedparser
-import pandas as pd
 from concurrent.futures import ThreadPoolExecutor
 
 class EpisodeFetcher():

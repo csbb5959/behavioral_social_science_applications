@@ -35,12 +35,11 @@ class FetchPipeline():
         df["group"] = self.group
         df = self.__add_hash_podcasts_rank(df)
         df = self.__add_episode_hash_rank(df)
-        df["processing_status"] = "pending"
         df = self.__sort(df)
         return df
 
     def select(self, df: pd.DataFrame, k: int) -> pd.DataFrame:
-            return df.groupby(["feed_url", "year"]).head(k)
+            return df.groupby(["feed_url", "episode_year"]).head(k)
 
     def __sort(self, df: pd.DataFrame) -> pd.DataFrame:
         return df.sort_values(by=["podcast_hash", "episode_year", "episode_hash"])
