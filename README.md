@@ -94,7 +94,7 @@ Each stage writes a file and skips already processed entries. No random sampling
 * Filter: Duration 15 minutes, remove missing values, year within timeframe.
 * Keep a podcast only if it has at least 2k suitable episodes in every year (buffer for replacements).
 
-### Stage 3: Random Ranks and Status [CORE] — 2–3 h
+### Stage 3: Random Ranks and Status [CORE] — Completed
 
 * `podcast_rank = Hash(Seed, feed_url)`; `rank = Hash(Seed, guid)`. Use `hashlib`, not Python’s built-in `hash()`.
 * Status column for podcasts and episodes: `pending` / `passed` / `failed` + reason.
@@ -106,14 +106,14 @@ Each stage writes a file and skips already processed entries. No random sampling
 * Only process remaining episodes after the podcast passes the spontaneity check (Stage 7). The two screening episodes count toward this.
 * If the podcast fails, only 2 audio excerpts ($20\text{ min}$ of audio) have been transcribed in vain.
 
-### Stage 4: Download [CORE] — 4–6 h
+### Stage 4: Download [CORE] — Completed
 
 * For each podcast and year, take the first $k$ episodes in rank order.
 * Extract excerpt from minute 5–15 using `ffmpeg` directly from the URL (`-ss` before `-i`), $16\text{ kHz}$ mono.
 * Log: download date, final URL, file hash, success yes/no.
 * Download failed $\to$ episode `failed`, take next in rank order.
 
-### Stage 5: Transcription [CORE] — 4–6 h
+### Stage 5: Transcription [CORE] + Speaker Seperation — Completed
 
 * Deepgram `nova-3` via API (`filler_words=True`, `diarize_model="v2"`, `smart_format=True`). Same model and parameters for all years. The hosted model can change over time, so report the exact version stored in each response (`metadata.model_info`).
 * Save the full JSON response (word-level timestamps, confidence and speaker labels). Detect language (`detect_language=True`, not enabled yet, check support for `nova-3`), non-English episodes $\to$ `failed`.
@@ -128,7 +128,7 @@ Each stage writes a file and skips already processed entries. No random sampling
 * **[OPTIONAL]** Calibrate rule in pilot (before screening).
 * **[OPTIONAL]** Validation: Manually check 20–30 excerpts.
 
-### Stage 7: Spontaneity Check (Runs after ad removal on the 2 screening episodes)
+### Stage 7: Spontaneity Check (Runs after ad removal on the 2 screening episodes) – Completed
 
 * **[CORE] — 4–6 h:** Podcast-level via LLM. Send ~300 words from each of the two cleaned screening transcripts to an LLM: "scripted or conversation?". If one fails $\to$ podcast `failed`, next podcast in rank order. Record prompt and model.
 * Uses ad-cleaned text, since sponsor reads are scripted and would bias the rating towards "scripted". Ad removal is a cheap keyword rule and the screening episodes have to pass it anyway, so running it first costs nothing extra.
@@ -142,12 +142,7 @@ Each stage writes a file and skips already processed entries. No random sampling
 * Repeat until every cell (Podcast $\times$ Year) has $k$ passed episodes and $N$ podcasts per group have passed.
 * No incomplete cells (podcast-years with fewer episodes are noisier and appear more dissimilar).
 
-### Stage 8: Speaker Separation [OPTIONAL]
-
-* Speaker labels per word come from Deepgram diarization (Stage 5). Host = most speaking time, use only host words.
-* Without: Limitation (shifting guests can influence similarity).
-
-### Stage 9: Measures
+### Stage 8: Measures
 
 * **[CORE] — 4–5 h:** Exactly 1000 words per episode (the first ones after cleaning). Function word profile: frequencies of ~150 function words and discourse markers (pre-defined list, teammate), z-standardized across all years and groups. Average across the $k$ episodes per podcast and year.
 * **[CHEAP]** Complexity metrics according to Sourati et al. (2026): Type-Token Ratio, Shannon Entropy, Simpson Index, Hapax Legomena on the same 1000 words.
@@ -155,7 +150,7 @@ Each stage writes a file and skips already processed entries. No random sampling
 * **[OPTIONAL]** Style Embeddings (e.g., CISR).
 * **[OPTIONAL]** Semantic embeddings as a topic control.
 
-### Stage 10: Statistics [CORE] — 6–8 h
+### Stage 9: Statistics [CORE] — 6–8 h
 
 * Metric: Mean pairwise Burrows' Delta distance between podcasts per group and year. Homogenization = distance decreases.
 * Test: $(\text{Post-Mean} - \text{Pre-Mean})$ in Tech minus the same in Sports (Difference-in-Differences).
@@ -163,6 +158,11 @@ Each stage writes a file and skips already processed entries. No random sampling
 * Plot: Trajectory of both groups over the years, visually compare pre-trends.
 * **[OPTIONAL]** Permutation test (permute year labels within each podcast).
 * **[CHEAP]** Same analysis with Sourati metrics (variance between podcasts per year).
+
+### Stage 10: Documentation [CORE]
+
+* **[CORE] — 4–6 h:** Flowchart of exclusions, limitations, and discussion of potential biases. Include the exact prompt and model used for the spontaneity check.
+* **[CORE]** tbd
 
 ### Stage 11: Robustness [OPTIONAL]
 
@@ -186,7 +186,9 @@ Each stage writes a file and skips already processed entries. No random sampling
 
 ### Work Distribution
 
-unclar
+Lucas: Stages 3–7
+Carma: Stages 8–11
+Gaia: Writing, report
 
 ---
 
