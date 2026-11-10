@@ -1,6 +1,7 @@
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 import pandas as pd
+import json
 import logging
 import os
 import dotenv
@@ -22,10 +23,10 @@ class EpisodeTranscriber():
 
     def transcribe(self, df: pd.DataFrame) -> pd.DataFrame:
         with ThreadPoolExecutor(max_workers=self.max_workers) as ex:
-            results = list(ex.map(self.__transcribe_one, df["episode_hash"], df["audio_path"]))
+            results = list(ex.map(self.transcribe_one, df["episode_hash"], df["audio_path"]))
             return pd.DataFrame(results, columns=["episode_hash", "success", "path", "error"])
 
-    def __transcribe_one(self, episode_hash: str, episode_path: Path):
+    def transcribe_one(self, episode_hash: str, episode_path: Path):
         out = self.out_dir / f"{episode_hash}.json"
         if out.exists():
             return episode_hash, True, str(out), None
@@ -38,6 +39,8 @@ class EpisodeTranscriber():
                     request=audio_file.read(),
                     request_options={"max_retries": MAX_RETRIES},
                     model="nova-3",
+                    filler_words=True, # Represents spoken language
+                    diarize_model="v2", # Speaker seperation
                     smart_format=True,
                 )
         
@@ -53,3 +56,18 @@ class EpisodeTranscriber():
             tmp.unlink(missing_ok=True)
             err = f"ApiError {e.status_code}: {e.body}" if isinstance(e, ApiError) else repr(e)
             return episode_hash, False, None, err
+
+
+def _load_alternative(path: str) -> dict:
+    """Return the transcription result from a saved Deepgram JSON response."""
+    with open(path, encoding="utf-8") as f:
+        data = json.load(f)
+    return data["results"]["channels"][0]["alternatives"][0]
+
+def load_transcript_text(path: str) -> str:
+    """Return the plain transcript text (no speaker labels)."""
+    return _load_alternative(path)["transcript"]
+
+def load_transcript_words(path: str) -> list:
+    """Return all words as dicts with word, punctuated_word, start, end, confidence and speaker."""
+    return _load_alternative(path)["words"]

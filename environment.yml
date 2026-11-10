@@ -10,4 +10,5 @@ dependencies:
   - feedparser=6.0.14
   - python-dotenv=1.2.4
   - deepgram-sdk=7.17.0
+  - groq=1.7.0
   - ipykernel=7.4.0  # run the notebooks

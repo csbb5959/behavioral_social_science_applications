@@ -12,14 +12,14 @@ class ProcessingPipeline():
         self.ep_transcriber = ep_transcriber
 
     def process(self, df: pd.DataFrame, k_test: int, n_podcasts: int) -> pd.DataFrame: # k_test: episodes tested per year, n_podcasts: podcasts per group
-        """Full process: Donwload -> Transcription -> Spontaneity Check -> Ad Removal
+        """Full process: Download -> Transcription -> Ad Removal -> Spontaneity Check
         At first, we only take k_test episodes for the first and last year to check scripted vs. non scripted, before processing
         k episodes per year for each podcast."""
 
         df["fail_stage"] = pd.NA # Safe stage in case of failure
-        df["fail_reason"] = pd.NA # Safe reason in case of failure
+        df["episode_fail_reason"] = pd.NA # Safe reason in case of failure
         df["audio_path"] = pd.NA # Path for audio wav file
-        df["processing_status"] = "pending" # Track status
+        df["episode_status"] = "pending" # Track status
         df["transcript_path"] = pd.NA # Path for transcription json file
         df["podcast_status"] = "pending" # Podcast-level status, "failed" excludes the whole podcast
         df["podcast_fail_reason"] = pd.NA
@@ -35,7 +35,7 @@ class ProcessingPipeline():
         return first_n["feed_url"]
 
     def __select_episodes(self, df: pd.DataFrame, podcasts: Series, years: list, k: int) -> pd.DataFrame:
-        active = df[(df["processing_status"] != "failed") & df["feed_url"].isin(podcasts) & df["episode_year"].isin(years)]
+        active = df[(df["episode_status"] != "failed") & df["feed_url"].isin(podcasts) & df["episode_year"].isin(years)]
         return active.groupby(["feed_url", "episode_year"]).head(k) # first k episodes in rank order per podcast and year
 
     def __incomplete_podcasts(self, candidates: pd.DataFrame, podcasts: Series, years: list, k: int) -> list:
@@ -60,7 +60,7 @@ class ProcessingPipeline():
             if incomplete:
                 rows = df["feed_url"].isin(incomplete)
                 df.loc[rows, "podcast_status"] = "failed"
-                df.loc[rows, "podcast_fail_reason"] = "not enough episodes"
+                df.loc[rows, "podcast_episode_fail_reason"] = "not enough episodes"
                 continue                           # next podcast in rank order moves up
 
             if candidates["transcript_path"].notna().all():
@@ -80,11 +80,11 @@ class ProcessingPipeline():
             row = df["episode_hash"] == result.episode_hash
             if result.success:
                 df.loc[row, "audio_path"] = result.path
-                df.loc[row, "processing_status"] = "downloaded"
+                df.loc[row, "episode_status"] = "downloaded"
             else:
-                df.loc[row, "processing_status"] = "failed"
+                df.loc[row, "episode_status"] = "failed"
                 df.loc[row, "fail_stage"] = "download"
-                df.loc[row, "fail_reason"] = result.error
+                df.loc[row, "episode_fail_reason"] = result.error
 
         return df
 
@@ -96,11 +96,11 @@ class ProcessingPipeline():
             row = df["episode_hash"] == result.episode_hash
             if result.success:
                 df.loc[row, "transcript_path"] = result.path
-                df.loc[row, "processing_status"] = "transcribed"
+                df.loc[row, "episode_status"] = "transcribed"
             else:
-                df.loc[row, "processing_status"] = "failed"
+                df.loc[row, "episode_status"] = "failed"
                 df.loc[row, "fail_stage"] = "transcription"
-                df.loc[row, "fail_reason"] = result.error
+                df.loc[row, "episode_fail_reason"] = result.error
 
         return df
         

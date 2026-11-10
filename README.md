@@ -102,8 +102,8 @@ Each stage writes a file and skips already processed entries. No random sampling
 
 #### Processing Order per Podcast (Important for Computational Effort)
 
-* First, process only 2 screening episodes (Stage 4 \to 5 \to 6): the first in rank order from the first year and the first from the last year. This also flags format changes over time.
-* Only process remaining episodes after the podcast passes the spontaneity check (Stage 6). The two screening episodes count toward this.
+* First, process only 2 screening episodes (Stage 4 $\to$ 5 $\to$ 6 $\to$ 7): the first in rank order from the first year and the first from the last year. This also flags format changes over time.
+* Only process remaining episodes after the podcast passes the spontaneity check (Stage 7). The two screening episodes count toward this.
 * If the podcast fails, only 2 audio excerpts ($20\text{ min}$ of audio) have been transcribed in vain.
 
 ### Stage 4: Download [CORE] — 4–6 h
@@ -115,24 +115,27 @@ Each stage writes a file and skips already processed entries. No random sampling
 
 ### Stage 5: Transcription [CORE] — 4–6 h
 
-* `faster-whisper large-v3` on Kaggle (GPU). Fixed version and parameters for all years: `vad_filter=True`, `condition_on_previous_text=False`, `word_timestamps=True`.
-* Save segments with timestamps. Save detected language, non-English episodes $\to$ `failed`.
-* **[CHEAP]** Save `avg_logprob` per episode and report per year (transcription quality, e.g., remote recordings 2020–2021).
+* Deepgram `nova-3` via API (`filler_words=True`, `diarize_model="v2"`, `smart_format=True`). Same model and parameters for all years. The hosted model can change over time, so report the exact version stored in each response (`metadata.model_info`).
+* Save the full JSON response (word-level timestamps, confidence and speaker labels). Detect language (`detect_language=True`, not enabled yet, check support for `nova-3`), non-English episodes $\to$ `failed`.
+* Filler words ("uh", "um") are kept (Deepgram drops them by default), since they are a marker of spontaneous speech and matter for the spontaneity check.
+* **[CHEAP]** Save mean word `confidence` per episode and report per year (transcription quality, e.g., remote recordings 2020–2021).
 
-### Stage 6: Spontaneity Check (Runs after transcribing the 2 screening episodes)
+### Stage 6: Ad Removal
 
-* **[CORE] — 4–6 h:** Podcast-level via LLM. Send ~300 words from each of the two screening transcripts to an LLM: "scripted or conversation?". If one fails $\to$ podcast `failed`, next podcast in rank order. Record prompt and model.
-* **[OPTIONAL]** Pre-screening with a small custom Whisper model before main transcription (saves the 2 `large-v3` transcriptions on failure).
+* **[CORE] — 3–4 h:** Keyword rule. Define list in advance (teammate): e.g., "sponsored by", "brought to you by", "this episode is supported by", "today's sponsor", "promo code", "use code", "discount code", "% off", "free trial", "terms apply", "go to [...].com", "visit [...].com/". Group hits closer than $120\text{ s}$ into a single block, remove from $15\text{ s}$ before to $30\text{ s}$ after. Fewer than 1000 remaining words $\to$ episode `failed`, replacement.
+* Runs before the spontaneity check, so the rule must be final before screening starts.
+* **[CHEAP]** Report proportion of removed time per year (indicator of dynamically inserted ads).
+* **[OPTIONAL]** Calibrate rule in pilot (before screening).
+* **[OPTIONAL]** Validation: Manually check 20–30 excerpts.
+
+### Stage 7: Spontaneity Check (Runs after ad removal on the 2 screening episodes)
+
+* **[CORE] — 4–6 h:** Podcast-level via LLM. Send ~300 words from each of the two cleaned screening transcripts to an LLM: "scripted or conversation?". If one fails $\to$ podcast `failed`, next podcast in rank order. Record prompt and model.
+* Uses ad-cleaned text, since sponsor reads are scripted and would bias the rating towards "scripted". Ad removal is a cheap keyword rule and the screening episodes have to pass it anyway, so running it first costs nothing extra.
+* **[OPTIONAL]** Pre-screening with a cheaper ASR model before main transcription (saves the 2 `nova-3` transcriptions on failure).
 * **[OPTIONAL]** Conversation criterion via diarization ($\geq 2$ speakers, $\geq 4$ turns, like Yakura et al.).
 * **[OPTIONAL]** Yakura's classifier instead of LLM (runs directly on audio, i.e., right after Stage 4).
 * **[OPTIONAL]** Validation: Read 30 excerpts and compare with LLM decision (~1 h, teammate).
-
-### Stage 7: Ad Removal
-
-* **[CORE] — 3–4 h:** Keyword rule. Define list in advance (teammate): e.g., "sponsored by", "brought to you by", "this episode is supported by", "today's sponsor", "promo code", "use code", "discount code", "% off", "free trial", "terms apply", "go to [...].com", "visit [...].com/". Group hits closer than $120\text{ s}$ into a single block, remove from $15\text{ s}$ before to $30\text{ s}$ after. Fewer than 1000 remaining words $\to$ episode `failed`, replacement.
-* **[CHEAP]** Report proportion of removed time per year (indicator of dynamically inserted ads).
-* **[OPTIONAL]** Calibrate rule in pilot.
-* **[OPTIONAL]** Validation: Manually check 20–30 excerpts.
 
 #### Loop Stages 4–7 [CORE] — Included in Stage 3
 
@@ -141,7 +144,7 @@ Each stage writes a file and skips already processed entries. No random sampling
 
 ### Stage 8: Speaker Separation [OPTIONAL]
 
-* `pyannote speaker-diarization-3.1`, host = most speaking time, use only host words.
+* Speaker labels per word come from Deepgram diarization (Stage 5). Host = most speaking time, use only host words.
 * Without: Limitation (shifting guests can influence similarity).
 
 ### Stage 9: Measures
@@ -175,7 +178,7 @@ Each stage writes a file and skips already processed entries. No random sampling
 
 
 3. Preregistration [CORE, Teammates]: Brief, 1–2 pages, OSF template. Hypothesis, timeframe, groups, primary measure, test, exclusion rules, replacement rule, seed, keyword list, function word list.
-4. Full Run [CORE]: Roughly 10–20 GPU hours (Kaggle ~30 h/week), 1–2 weeks calendar time.
+4. Full Run [CORE]: Deepgram cost scales with audio minutes (10 min per episode), so estimate the budget from $N$, $k$ and the number of years before starting.
 5. Analysis Stages 9–10 [CORE]: Can be prepared by a teammate using smoke test data.
 6. Report [CORE, Team]: Including flowchart of exclusions and limitations.
 
@@ -192,7 +195,7 @@ unclar
 1. **Survivorship bias via panel design:** Only podcasts that survived the entire timeframe.
 2. **No separation of host and guest** (if Stage 8 omitted).
 3. **Spontaneity check and ad rule not manually validated.**
-4. **Whisper smooths style (filler words)** $\to$ effect likely underestimated.
+4. **ASR smooths style** (`smart_format` normalizes punctuation and numbers, filler words are kept but may not be captured completely) $\to$ effect likely underestimated.
 5. **Dynamically inserted ads removed only via keywords;** residuals possible.
 6. **Control group also has AI exposure, just less** $\to$ effect likely underestimated.
 7. **Parallel pre-trends only roughly testable** (few pre-years).
