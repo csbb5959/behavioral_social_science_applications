@@ -23,27 +23,21 @@ Notebooks must run with their own folder as working directory (VS Code default),
 
 ## General Idea
 
-[Sourati et al.](https://doi.org/10.1016/j.tics.2026.01.003) (2nd paper from AI Ethics) show: 
-- Homogenization happens on the language and reasoning level etc. --> Meta analysis showed significant, small effect [de Rooij et al.](https://doi.org/10.1080/0144929X.2026.2726451)
-- Most studies inspect written language, specifically lab tests where subjects to exercises mostly with or without AI
+**Background.** LLM use homogenizes human language and reasoning ([Sourati et al.](https://doi.org/10.1016/j.tics.2026.01.003)). A meta-analysis finds a significant, small homogenization effect in human–AI co-creation ([de Rooij & Biskjaer](https://doi.org/10.1080/0144929X.2026.2726451)). Most of this evidence comes from written language, typically lab tasks done with or without AI.
 
-[Doshi](https://scholar.google.com/scholar_lookup?title=Generative%20AI%20enhances%20individual%20creativity%20but%20reduces%20the%20collective%20diversity%20of%20novel%20content&author=A.R.%20Doshi&publication_year=2024) and many other studies ([also meta analysis](https://arxiv.org/abs/2505.17241)) show that this can have negative effects on collective creativity for example (can I add "and moral responsibility?" so I can motivate even more why we chose this topic and I really like writing about it hihi). [Sourati et al.](https://doi.org/10.1016/j.tics.2026.01.003) give a good overview of this. So studying this is important cause it could have significant effects on global creativity (and morality! You will see tomorrow).
+**Why it matters.** Less diversity between people can reduce collective creativity ([Doshi & Hauser](https://doi.org/10.1126/sciadv.adn5290), [meta-analysis](https://arxiv.org/abs/2505.17241)); [Sourati et al.](https://doi.org/10.1016/j.tics.2026.01.003) give an overview.
 
-What has not been done/studied thoroughly before: 
+**Gap and research question.** **Does AI also lead to homogenization in spoken language?** [Sourati et al.](https://doi.org/10.1016/j.tics.2026.01.003) suggest it but do not test it. [Yakura et al.](https://doi.org/10.48550/arXiv.2409.01754) show that AI-typical words (like "delve") increase in podcasts, but do not look at homogenization.
 
---> **Does AI also lead to homogenization in spoken language?** [Sourati et al.](https://doi.org/10.1016/j.tics.2026.01.003) hint this, but don't inspect it. [Yakura et al.](https://doi.org/10.48550/arXiv.2409.01754) show that AI words increase in podcasts (like "dvelve"), but dont inspect homogenization. 
-(Are we sure there are no studies on this? Cause this is a strong claim).
+**Approach.** Take podcasts that ran through the whole timeframe, transcribe fixed-length excerpts per podcast and year, describe each podcast-year by its style profile, and compare how similar podcasts are to each other before and after the release of ChatGPT, in a group with high AI exposure against a control group (Difference-in-Differences). Details in the plan below.
 
-## Process
-
-1. Find ~20-100 podcasts pre and post AI with specific time windows (what about political discourses? too difficult?) (and are we able to find podasts from before 2021?)
-2. Use 10-30 minutes of podcasts per time window and transcribe them
-3. Analyse functional words / maybe embeddings as well & extract AI keywords like [Yakura et al.](https://doi.org/10.48550/arXiv.2409.01754) (2nd one is important to see if the same AI effect happens in our sample, if not, homogenization is less likely as well)
-4. Compare functional words between podcasts pre and post AI with **Difference in Differences** (DiD)
+**Open points for the introduction.**
+* Literature search to confirm that homogenization of spoken language has not been studied yet (the gap is a strong claim).
+* Whether to also motivate the topic via moral responsibility, in addition to collective creativity.
 
 ## Hypothesis:
-- H1: AI words increase post AI, just like in [Yakura et al.](https://doi.org/10.48550/arXiv.2409.01754) study
-- H2: Podcasts after AI appearance are more similar then pre AI --> Homogenization effect
+- H1 (primary, tested): Podcasts after AI appearance are more similar than pre AI --> Homogenization effect
+- Descriptive only, not tested: AI words increase post AI, like in the [Yakura et al.](https://doi.org/10.48550/arXiv.2409.01754) study. Our corpus is far too small to test this (see Stage 8).
 
 ----------------------------
 
@@ -61,18 +55,26 @@ Course project, 2.5 ECTS (~60–75 h per person), 3 members
 
 ---
 
-### Fixed Parameters
+### Design Decisions (must be made and justified before preregistration)
 
-* **Control group:** Sports (Tech vs Sports vs Politics). 
-Three categories with different levels of AI exposure. A "group" column in all tables, a single pipeline for both groups.
-* **Primary measure:** Function word profiles with Burrows’ Delta.
-* **Sample:** N = unclear podcasts per group, k = 2 episodes per year (fixed, not estimated via a pilot).
+These choices determine what the study can show. Each one needs a short justification in the report, based on **literature** (what did comparable studies do, what are known minimum requirements) and on **logic** (why does it fit our question and budget). All of them are parameters in the code, and all of them are fixed in the preregistration. "Proposed" values come from an external review of this plan and are not final; several depend on the power simulation (see Procedure).
 
----
+| # | Decision | Current state | Options / proposal | Justify with |
+|---|---|---|---|---|
+| 1 | **Timeframe** (which years, where pre/post is cut) | 2018–2026 in code | At least 3 pre-years. ChatGPT release: Nov 30, 2022, so 2022 counts as pre-period (pre = 2018–2022, post = 2023–2026). Decide whether 2020 is kept (see #4) | Diffusion of LLM use over time, Yakura et al., requirements of Difference-in-Differences (pre-trends) |
+| 2 | **Number of podcasts per group ($N$)** | open | Result of the power simulation, limited by budget | Power simulation, effect sizes from de Rooij & Biskjaer (meta-analysis) |
+| 3 | **Episodes per podcast and year ($k$) and words per episode** | $k = 2$, 1000 words | Proposed: $k$ = 3–4 and the full cleaned excerpt at a fixed length (~1400 words), i.e. roughly 5000+ words per podcast-year | Minimum text length for stable Delta values (e.g. Eder 2015, to be verified), power simulation |
+| 4 | **Categories: treatment and control group** | Not final. Latest agreement: Tech (treatment), Sports (control), Politics (exploratory, out of interest). The code currently filters sports/games/science for testing only | Needs groups with clearly different AI exposure but similar format. The confirmatory test is Tech vs Sports only; Politics is reported separately. Sports and 2020 is a problem (no live sports, format changes in the middle of the pre-period), so drop or test 2020. Politics has election-year cycles. A third group adds about 50% transcription cost | Evidence on AI adoption by domain, parallel-trends assumption |
+| 5 | **Primary measure** | Function words + Burrows' Delta | Function words (robust against topic, but the least sensitive part of style), function words plus discourse markers and connectives ("additionally", "overall"), or style embeddings. Content words are excluded since they confound topic | Stylometry literature (Burrows 2002), evidence on which word classes LLMs influence (Yakura et al., Juzek et al.) |
+| 6 | **Size of the word list** | ~150 words | Proposed: the 50–100 most frequent, so each word occurs often enough in the available text | Stylometry literature, frequencies in our smoke-test data |
+| 7 | **Excerpt** (position and length) | minute 5–15 in code, not final | Middle of the episode is probably better (less intro and fewer pre-roll ads, and seeking errors matter less), but needs the episode duration from the feed | Typical podcast structure, ad placement, cost per minute |
+| 8 | **Spontaneity criterion** | LLM score 1–4 on ~300 words, threshold 3, screening on first and last year | Proposed: screen only on pre-period episodes, see Stage 7. Threshold and prompt are fixed in advance | Yakura et al. (conversation criterion), post-treatment selection bias, validation on hand-rated excerpts |
+| 9 | **Ad removal rule** | keyword list + time window | Fixed before screening | Manual check of 20–30 excerpts |
+| 10 | **Speakers** (all speakers vs host only) | all speakers | All speakers as primary analysis, with number of speakers and host share as control. Host-only costs text (conflicts with #3) | Function words depend on monologue vs dialogue ("I", "you") |
+| 11 | **Statistical test** | Difference-in-Differences, bootstrap over podcasts | See Stage 9 for the corrected bootstrap | DiD literature, power simulation |
+| 12 | **Transcription settings** | Deepgram `nova-3`, filler words kept, diarization | Fixed, report model version | Filler words are markers of spontaneous speech |
 
-### Still Open
-
-* **Timeframe:** 2018–2026. Treated as a parameter in the code. ChatGPT was released on November 30, 2022; at least three pre-years are sensible.
+Already fixed: one pipeline for all groups with a `group` column, deterministic sampling via hash ranks, replacement rule, seed.
 
 ---
 
@@ -91,8 +93,8 @@ Each stage writes a file and skips already processed entries. No random sampling
 ### Stage 2: Episode Table [CORE] — Completed
 
 * Parse feeds. Columns: `feed_url`, `group`, `guid`, `year`, `pub_date`, `title`, `duration`, `audio_url`.
-* Filter: Duration 15 minutes, remove missing values, year within timeframe.
-* Keep a podcast only if it has at least 2k suitable episodes in every year (buffer for replacements).
+* Filter: Duration at least 15 minutes, remove missing values, year within timeframe.
+* Keep a podcast only if it has at least $2 \times k$ suitable episodes in every year (buffer for replacements).
 
 ### Stage 3: Random Ranks and Status [CORE] — Completed
 
@@ -102,7 +104,7 @@ Each stage writes a file and skips already processed entries. No random sampling
 
 #### Processing Order per Podcast (Important for Computational Effort)
 
-* First, process only 2 screening episodes (Stage 4 $\to$ 5 $\to$ 6 $\to$ 7): the first in rank order from the first year and the first from the last year. This also flags format changes over time.
+* First, process only 2 screening episodes (Stage 4 $\to$ 5 $\to$ 6 $\to$ 7): the first in rank order from the first year (2018) and the first from the last **pre-period** year (2022). No post-period episode is used for screening (see Stage 7). Not implemented yet: the code still screens on the first and last year overall.
 * Only process remaining episodes after the podcast passes the spontaneity check (Stage 7). The two screening episodes count toward this.
 * If the podcast fails, only 2 audio excerpts ($20\text{ min}$ of audio) have been transcribed in vain.
 
@@ -119,6 +121,7 @@ Each stage writes a file and skips already processed entries. No random sampling
 * Save the full JSON response (word-level timestamps, confidence and speaker labels). Detect language (`detect_language=True`, not enabled yet, check support for `nova-3`), non-English episodes $\to$ `failed`.
 * Filler words ("uh", "um") are kept (Deepgram drops them by default), since they are a marker of spontaneous speech and matter for the spontaneity check.
 * **[CHEAP]** Save mean word `confidence` per episode and report per year (transcription quality, e.g., remote recordings 2020–2021).
+* **[CORE]** Save number of speakers and the share of words spoken by the main speaker per episode (from the speaker labels). Monologue and dialogue differ in function words such as "I" and "you", so this is needed as a control in Stage 9.
 
 ### Stage 6: Ad Removal
 
@@ -132,6 +135,9 @@ Each stage writes a file and skips already processed entries. No random sampling
 
 * **[CORE] — 4–6 h:** Podcast-level via LLM. Send ~300 words from each of the two cleaned screening transcripts to an LLM: "scripted or conversation?". If one fails $\to$ podcast `failed`, next podcast in rank order. Record prompt and model.
 * Uses ad-cleaned text, since sponsor reads are scripted and would bias the rating towards "scripted". Ad removal is a cheap keyword rule and the screening episodes have to pass it anyway, so running it first costs nothing extra.
+* **Screening uses pre-period episodes only.** If AI makes podcasts more scripted (hosts reading LLM-prepared text), screening on a post-period episode would remove exactly the affected podcasts and bias the result towards zero (selection on a post-treatment variable).
+* **[CORE]** Compute the spontaneity score for **all** episodes, not only the screening ones (LLM cost is negligible), and report it per group and year: do podcasts become more scripted? This is a finding in its own right.
+* Robustness (Stage 11): repeat the main analysis without low-score episodes, since scripted post-period episodes would measure read-out text instead of spontaneous speech.
 * **[OPTIONAL]** Pre-screening with a cheaper ASR model before main transcription (saves the 2 `nova-3` transcriptions on failure).
 * **[OPTIONAL]** Conversation criterion via diarization ($\geq 2$ speakers, $\geq 4$ turns, like Yakura et al.).
 * **[OPTIONAL]** Yakura's classifier instead of LLM (runs directly on audio, i.e., right after Stage 4).
@@ -144,9 +150,10 @@ Each stage writes a file and skips already processed entries. No random sampling
 
 ### Stage 8: Measures
 
-* **[CORE] — 4–5 h:** Exactly 1000 words per episode (the first ones after cleaning). Function word profile: frequencies of ~150 function words and discourse markers (pre-defined list, teammate), z-standardized across all years and groups. Average across the $k$ episodes per podcast and year.
-* **[CHEAP]** Complexity metrics according to Sourati et al. (2026): Type-Token Ratio, Shannon Entropy, Simpson Index, Hapax Legomena on the same 1000 words.
-* **[CHEAP]** Rate of known ChatGPT words per year (list by Juzek et al., `[github.com/fsu-nlp/ai-traces-ssl](https://github.com/fsu-nlp/ai-traces-ssl)`) as a sanity check.
+* **[CORE] — 4–5 h:** A fixed number of words per episode (the first ones after cleaning), identical for all episodes. Function word profile: frequencies of a pre-defined word list (teammate), z-standardized across all years and groups. Average across the $k$ episodes per podcast and year.
+* **Text amount (Design Decisions #3, #6):** 2 × 1000 words per podcast-year is too little for Burrows' Delta. Rare function words then occur only one to three times, so distances are mostly noise. Since the length is the same in all years this does not bias the comparison, but it hides a small effect (low power). Proposed: full cleaned excerpt at a fixed length (~1400 words), $k$ = 3–4, word list cut to the 50–100 most frequent words. Final values come from the power simulation. The ad-removal minimum ("fewer than 1000 remaining words", Stage 6) must be raised to the chosen length.
+* **[CHEAP]** Complexity metrics according to Sourati et al. (2026): Type-Token Ratio, Shannon Entropy, Simpson Index, Hapax Legomena on the same words.
+* **[CHEAP]** Rate of known ChatGPT words per year (list by Juzek et al., `[github.com/fsu-nlp/ai-traces-ssl](https://github.com/fsu-nlp/ai-traces-ssl)`). **Descriptive only, no hypothesis test:** these words occur a few times per million words, so with our corpus size the expected counts per group and year are far too small to detect an increase (Yakura et al. used a corpus several orders of magnitude larger).
 * **[OPTIONAL]** Style Embeddings (e.g., CISR).
 * **[OPTIONAL]** Semantic embeddings as a topic control.
 
@@ -154,8 +161,10 @@ Each stage writes a file and skips already processed entries. No random sampling
 
 * Metric: Mean pairwise Burrows' Delta distance between podcasts per group and year. Homogenization = distance decreases.
 * Test: $(\text{Post-Mean} - \text{Pre-Mean})$ in Tech minus the same in Sports (Difference-in-Differences).
-* Confidence interval via bootstrap over podcasts (not episodes).
-* Plot: Trajectory of both groups over the years, visually compare pre-trends.
+* Confidence interval via bootstrap over podcasts (not episodes). **Avoid self-pairs:** resampling podcasts with replacement and then computing pairwise distances creates duplicate pairs with distance 0, which pulls the mean distance down and distorts the interval. Instead compute, once on the original data, each podcast's mean distance to all other podcasts of its group per year (one value per podcast × year), then bootstrap podcasts over these values.
+* Control for speaker composition: number of speakers and main-speaker share (Stage 5) as covariate or robustness check.
+* Plot: Trajectory of both groups over the years, visually compare pre-trends. If Sports is the control group, check 2020 explicitly (Design Decisions #4).
+* **[CORE] Power simulation before preregistration — 3–4 h:** take the smoke-test/pilot profiles, build synthetic datasets with a small built-in homogenization effect, and count how often the test detects it for different $N$, $k$, text lengths and word-list sizes. This decides Design Decisions #2, #3 and #6, and whether the full run is worth its cost.
 * **[OPTIONAL]** Permutation test (permute year labels within each podcast).
 * **[CHEAP]** Same analysis with Sourati metrics (variance between podcasts per year).
 
@@ -166,7 +175,8 @@ Each stage writes a file and skips already processed entries. No random sampling
 
 ### Stage 11: Robustness [OPTIONAL]
 
-* Different excerpt (minute 20–30), without ad cleaning, host-only (if Stage 8 omitted), style embeddings.
+* Different excerpt (minute 20–30), without ad cleaning, host-only (main speaker's words only, leaves less text), style embeddings.
+* Without low spontaneity-score episodes (Stage 7), without 2020 if Sports is the control group.
 
 ---
 
@@ -175,12 +185,11 @@ Each stage writes a file and skips already processed entries. No random sampling
 1. Code Stages 3–7 [CORE]
 2. Smoke Test [CORE] — 8–10 h: 1 podcast per group run completely through the pipeline, for debugging only, not for testing the hypothesis.
 * **[OPTIONAL]** Pilot with 3–5 podcasts for calibration and estimation of $N$.
-
-
-3. Preregistration [CORE, Teammates]: Brief, 1–2 pages, OSF template. Hypothesis, timeframe, groups, primary measure, test, exclusion rules, replacement rule, seed, keyword list, function word list.
-4. Full Run [CORE]: Deepgram cost scales with audio minutes (10 min per episode), so estimate the budget from $N$, $k$ and the number of years before starting.
-5. Analysis Stages 9–10 [CORE]: Can be prepared by a teammate using smoke test data.
-6. Report [CORE, Team]: Including flowchart of exclusions and limitations.
+3. Power simulation [CORE] with the smoke-test/pilot data (Stage 9). Then settle all Design Decisions and write down the justification for each.
+4. Preregistration [CORE, Teammates]: Brief, 1–2 pages, OSF template. Hypothesis, all Design Decisions (timeframe, groups, $N$, $k$, text length, primary measure, word list), test, exclusion rules, replacement rule, seed, keyword list.
+5. Full Run [CORE]: Deepgram cost scales with audio minutes: groups × $N$ × years × $k$ × 10 min (e.g. 2 × 30 × 9 × 4 × 10 = 21,600 min). Check the current price per minute and the remaining credit before starting.
+6. Analysis Stages 8–9 [CORE]: Can be prepared by a teammate using smoke test data.
+7. Report [CORE, Team]: Including flowchart of exclusions and limitations.
 
 ---
 
@@ -195,32 +204,33 @@ Gaia: Writing, report
 ### Limitations for the Report (One sentence each on why it matters)
 
 1. **Survivorship bias via panel design:** Only podcasts that survived the entire timeframe.
-2. **No separation of host and guest** (if Stage 8 omitted).
+2. **Host and guests analysed together;** speaker composition is only controlled via number of speakers and main-speaker share.
 3. **Spontaneity check and ad rule not manually validated.**
 4. **ASR smooths style** (`smart_format` normalizes punctuation and numbers, filler words are kept but may not be captured completely) $\to$ effect likely underestimated.
 5. **Dynamically inserted ads removed only via keywords;** residuals possible.
 6. **Control group also has AI exposure, just less** $\to$ effect likely underestimated.
 7. **Parallel pre-trends only roughly testable** (few pre-years).
-8. **English only, only two categories.**
-
----
-
-*Calibrated probability:* ~70% that the core version is feasible to this extent. ~65% that function word profiles provide enough signal for a small effect (speculation); a null result is possible and, with clean preregistration, still a valid outcome.
+8. **English only, few categories.**
+9. **Limited text per podcast and year** $\to$ noisy distances, low power for a small effect; a null result is not evidence of no effect.
+10. **Function words are the most stable part of style,** while the documented LLM influence is on content words $\to$ effect likely underestimated.
+11. **AI-word rates are descriptive only** (corpus too small for a test).
+12. **Excerpt position is approximate:** `ffmpeg` seeking in variable-bitrate MP3s is estimated, and dynamically inserted ads shift the content. Random, not systematic.
+13. **Spontaneity is screened in the pre-period only;** podcasts may become more scripted later (reported via the per-episode score).
 
 
 
 ## Sources
+- Anderson, B. R., Shah, J. H., & Kreminski, M. (2024). Homogenization Effects of Large Language Models on Human Creative Ideation. Proceedings of the 16th Conference on Creativity & Cognition, 413–425. https://doi.org/10.1145/3635636.3656204
 - Bender, E. M., Gebru, T., McMillan-Major, A., & Shmitchell, S. (2021). On the Dangers of Stochastic Parrots: Can Language Models Be Too Big? 🦜. Proceedings of the 2021 ACM Conference on Fairness, Accountability, and Transparency, FAccT ’21, 610–623. https://doi.org/10.1145/3442188.3445922
-- Doshi: Generative AI enhances individual creativity... - Google Scholar. (o. J.). Abgerufen 27. Oktober 2026, von https://scholar.google.com/scholar_lookup?title=Generative%20AI%20enhances%20individual%20creativity%20but%20reduces%20the%20collective%20diversity%20of%20novel%20content&author=A.R.%20Doshi&publication_year=2024
+- Bommasani, R., Creel, K. A., Kumar, A., Jurafsky, D., & Liang, P. (2022). Picking on the Same Person: Does Algorithmic Monoculture Lead to Outcome Homogenization? Advances in Neural Information Processing Systems, 35. https://doi.org/10.52202/068431-0265
+- de Rooij, A., & Biskjaer, M. M. (2026). Does generative AI make us think alike? A systematic review and meta-analysis of homogenisation effects in human–AI co-creation. Behaviour & Information Technology, 0(0), 1–14. https://doi.org/10.1080/0144929X.2026.2726451
+- Doshi, A. R., & Hauser, O. P. (2024). Generative AI enhances individual creativity but reduces the collective diversity of novel content. Science Advances, 10(28), eadn5290. https://doi.org/10.1126/sciadv.adn5290
 - Duede, E., Teplitskiy, M., Lakhani, K., & Evans, J. (2024). Being together in place as a catalyst for scientific advance. Research Policy, 53(2), 104911. https://doi.org/10.1016/j.respol.2023.104911
-- Homogenization Effects of Large Language Models on Human Creative Ideation | Proceedings of the 16th Conference on Creativity & Cognition. (o. J.). Abgerufen 27. Oktober 2026, von https://dl.acm.org/doi/10.1145/3635636.3656204
 - Hong, L., & Page, S. E. (2004). Groups of diverse problem solvers can outperform groups of high-ability problem solvers. Proceedings of the National Academy of Sciences, 101(46), 16385–16389. https://doi.org/10.1073/pnas.0403723101
 - Muthukrishna, M., & Henrich, J. (2016). Innovation in the collective brain. Philosophical Transactions of the Royal Society B: Biological Sciences, 371(1690), 20150192. https://doi.org/10.1098/rstb.2015.0192
 - Nijstad, B. A., Stroebe, W., & Lodewijkx, H. F. M. (2002). Cognitive stimulation and interference in groups: Exposure effects in an idea generation task. Journal of Experimental Social Psychology, 38(6), 535–544. https://doi.org/10.1016/S0022-1031(02)00500-0
-- Page: The difference: How the power of diversity... - Google Scholar. (o. J.). Abgerufen 27. Oktober 2026, von https://scholar.google.com/scholar_lookup?title=The%20Difference%3A%20How%20the%20Power%20of%20Diversity%20Creates%20Better%20Groups%2C%20Firms%2C%20Schools%2C%20and%20Societies&author=S.E.%20Page&publication_year=2008
-- Picking on the Same Person: Does Algorithmic Monoculture Lead to Outcome Homogenization? (o. J.). Proceedings.Com. Abgerufen 27. Oktober 2026, von https://www.proceedings.com/068431-0265.html
-- Scopus—Document Details. (o. J.). Abgerufen 27. Oktober 2026, von https://www.scopus.com/pages/publications/85166037135
+- Page, S. E. (2008). The Difference: How the Power of Diversity Creates Better Groups, Firms, Schools, and Societies. Princeton University Press.
 - Sourati, Z., S. Ziabari, A., & Dehghani, M. (2026). The homogenizing effect of large language models on human expression and thought. Trends in Cognitive Sciences, 30(9), 805–816. https://doi.org/10.1016/j.tics.2026.01.003
-- de Rooij, A., & Biskjaer, M. M. (2026). Does generative AI make us think alike? A systematic review and meta-analysis of homogenisation effects in human–AI co-creation. Behaviour & Information Technology, 0(0), 1–14. https://doi.org/10.1080/0144929X.2026.2726451
-- (PDF) Empirical evidence of Large Language Model’s influence on human spoken communication. (2026, Juli 17). ResearchGate. https://doi.org/10.48550/arXiv.2409.01754
+- Yakura, H., Lopez-Lopez, E., Brinkmann, L., de la Serna, I., Kirfel, L., Gupta, P., Soraperra, I., Eisenmann, T. F., Wulff, D. U., & Rahwan, I. (2024). Empirical evidence of Large Language Model's influence on human spoken communication. arXiv. https://doi.org/10.48550/arXiv.2409.01754
 
+To do: one entry could not be identified (Scopus record https://www.scopus.com/pages/publications/85166037135). Sources used in the plan but still missing here: Burrows (2002), Eder (2015), Juzek et al.
