@@ -13,7 +13,7 @@ class PodcastDatabase():
         """Return the column definitions of the table."""
         return self._cur.execute(f"PRAGMA table_info({self._table})").fetchall()       
 
-    def filter(self, filters: dict, limit=20) -> list:
+    def filter(self, filters: dict, limit=10) -> list:
         """Return the feed URLs of at most `limit` podcasts that match all filters.
         filters maps a column to its allowed values. newestItemPubdate and oldestItemPubdate take one year:
         the newest episode must be after that year started, the oldest one before."""
@@ -48,21 +48,6 @@ class PodcastDatabase():
     def close(self):
         """Close the database connection."""
         self._con.close()
-
-
-if __name__ == "__main__":
-
-    import sys
-    from pathlib import Path
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent)) # project root, where config.py is
-    from config import DATABASE_PATH, DATABASE_TABLE, GROUPS
-
-    filters = list(GROUPS.values())[0]
-    pod_db = PodcastDatabase(str(DATABASE_PATH), table=DATABASE_TABLE)
-
-    filtered_pods = pod_db.filter(filters=filters, limit=10)
-    pod_db.close()
-    print(filtered_pods)
     
 
     

@@ -23,13 +23,6 @@ GROUPS = {
               "newestItemPubdate": [2026],
               "oldestItemPubdate": [2018],
               "dead": ["0"]},
-    "second": {"language": ["en", "en-us"],
-              "category1": ["games", "science"],
-              "category2": ["hobbies", "medicine"],
-              "category3": ["video games", "education"],
-              "newestItemPubdate": [2026],
-              "oldestItemPubdate": [2018],
-              "dead": ["0"]},
 }
 
 # --- Download (Stage 4) ---

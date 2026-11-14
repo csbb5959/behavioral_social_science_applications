@@ -25,7 +25,7 @@ class ProcessingPipeline():
         Only podcasts that pass get k episodes per year processed."""
 
         new_columns = {
-            "episode_status": "pending",    # pending -> downloaded -> transcribed -> cleaned -> passed, or failed
+            "episode_status": "pending",    # pending -> downloaded -> transcribed -> cleaned -> processed, or failed
             "fail_stage": pd.NA,            # Stage in case of failure
             "episode_fail_reason": pd.NA,   # Reason in case of failure
             "audio_path": pd.NA,            # Path for audio wav file
@@ -71,9 +71,9 @@ class ProcessingPipeline():
                 df = self.__fail_podcasts(df, scripted, "scripted")
                 continue                            # next podcast in rank order moves up
 
-            if (candidates["episode_status"] == "passed").all():
+            if (candidates["episode_status"] == "processed").all():
                 df.loc[df["feed_url"].isin(podcasts), "podcast_status"] = "passed"
-                return df                           # every screening episode passed all stages and none is scripted
+                return df                           # every screening episode went through all stages and none is scripted
 
             df = self.__run_stages(df, candidates["episode_hash"])
 
@@ -89,8 +89,8 @@ class ProcessingPipeline():
                 df = self.__fail_podcasts(df, incomplete, "not enough episodes")
                 return df, False
 
-            if (candidates["episode_status"] == "passed").all():
-                return df, True                     # every cell (podcast x year) has k passed episodes
+            if (candidates["episode_status"] == "processed").all():
+                return df, True                     # every cell (podcast x year) has k processed episodes
 
             df = self.__run_stages(df, candidates["episode_hash"])
 
@@ -99,7 +99,7 @@ class ProcessingPipeline():
         df = self.__download(df, hashes)        # pending -> downloaded
         df = self.__transcribe(df, hashes)      # downloaded -> transcribed
         df = self.__remove_ads(df, hashes)      # transcribed -> cleaned
-        df = self.__classify(df, hashes)        # cleaned -> passed
+        df = self.__classify(df, hashes)        # cleaned -> processed
         return df
 
     # Both selections rely on df being sorted by rank, as returned by FetchPipeline.build_podcast_df
@@ -210,7 +210,7 @@ class ProcessingPipeline():
                 df.loc[row, "scripted"] = result.scripted
                 df.loc[row, "scripted_reason"] = result.scripted_reason
                 df.loc[row, "llm_model"] = result.model
-                df.loc[row, "episode_status"] = "passed"
+                df.loc[row, "episode_status"] = "processed"
             else:
                 df = self.__fail_episode(df, row, "spontaneity", result.error)
 

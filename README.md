@@ -39,13 +39,13 @@ A run can be interrupted and continued: finished downloads, transcripts and ad f
 
 ### Output for the analysis (Stages 8–9)
 
-`data/processed.pkl` (load with `pd.read_pickle`) has one row per episode. Use the rows with `podcast_status == "passed"` and `episode_status == "passed"`.
+`data/processed.pkl` (load with `pd.read_pickle`) has one row per episode. Use the rows with `podcast_status == "passed"` and `episode_status == "processed"`. `processed` only means that the episode went through all stages; whether it counts as scripted is in the column `scripted`.
 
 | Column | Content |
 |---|---|
 | `group`, `feed_url`, `podcast_title`, `episode_title`, `episode_year` | Identification |
 | `podcast_hash`, `episode_hash` | Random ranks; `episode_hash` is also the file name in all folders |
-| `episode_status`, `fail_stage`, `episode_fail_reason` | `pending` $\to$ `downloaded` $\to$ `transcribed` $\to$ `cleaned` $\to$ `passed`, or `failed` with stage and reason |
+| `episode_status`, `fail_stage`, `episode_fail_reason` | `pending` $\to$ `downloaded` $\to$ `transcribed` $\to$ `cleaned` $\to$ `processed`, or `failed` with stage and reason |
 | `podcast_status`, `podcast_fail_reason` | `pending` (not needed), `passed` (screening passed) or `failed` with reason |
 | `audio_path`, `transcript_path`, `cleaned_path` | Files of the episode |
 | `n_words`, `n_speakers`, `main_speaker_share`, `mean_confidence` | Computed on the ad-free words |
@@ -134,7 +134,7 @@ Each stage writes a file and skips already processed entries. No random sampling
 ### Stage 3: Random Ranks and Status [CORE] — Completed
 
 * `podcast_hash = SHA256(seed, feed_url)`; `episode_hash = SHA256(seed, episode_audio_url)`. Uses `hashlib`, not Python’s built-in `hash()`.
-* Status columns: `episode_status` (`pending` $\to$ `downloaded` $\to$ `transcribed` $\to$ `cleaned` $\to$ `passed`, or `failed` with `fail_stage` and `episode_fail_reason`) and `podcast_status` (`pending` / `passed` / `failed` with `podcast_fail_reason`).
+* Status columns: `episode_status` (`pending` $\to$ `downloaded` $\to$ `transcribed` $\to$ `cleaned` $\to$ `processed`, or `failed` with `fail_stage` and `episode_fail_reason`) and `podcast_status` (`pending` / `passed` / `failed` with `podcast_fail_reason`).
 * Selection: table sorted by `podcast_hash`, `episode_year`, `episode_hash`; take the first $N$ non-failed podcasts per group and the first $k$ non-failed episodes per podcast and year.
 
 #### Processing Order per Podcast (Important for Computational Effort)
@@ -182,7 +182,7 @@ Each stage writes a file and skips already processed entries. No random sampling
 #### Loop Stages 4–7 [CORE] — Completed
 
 * Screening phase: repeat until the first $N$ non-failed podcasts per group have passed the spontaneity check.
-* Main phase: repeat until every cell (Podcast $\times$ Year) of these podcasts has $k$ passed episodes. If a podcast runs out of episodes in a year, it fails and its replacement is screened first.
+* Main phase: repeat until every cell (Podcast $\times$ Year) of these podcasts has $k$ processed episodes. If a podcast runs out of episodes in a year, it fails and its replacement is screened first.
 * An episode fails on a download or transcription error, on too few words after ad removal, or on an LLM error. The next episode in rank order takes its place.
 * No incomplete cells (podcast-years with fewer episodes are noisier and appear more dissimilar).
 

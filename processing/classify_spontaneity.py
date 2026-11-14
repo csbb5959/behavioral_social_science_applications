@@ -17,14 +17,16 @@ Rate how spontaneous the speech is:
 First give a one-sentence reason, then the score.
 Answer only with JSON: {"reason": "...", "score": <1-4>}"""
 
+MAX_RETRIES = 10    # the Groq client waits as long as the API asks for after a rate limit error (429) and tries again
+
 class SpontaneityClassifier():
     """Rates with an LLM how spontaneous the speech of an episode is (score 1-4)."""
-    def __init__(self, max_workers: int = 4, temperature: int=0):
+    def __init__(self, max_workers: int = 2, temperature: int=0):
         """Create the Groq client (GROQ_API_KEY from .env). max_workers is the number of parallel requests."""
         self.max_workers = max_workers
         self.temperature = temperature
         dotenv.load_dotenv()
-        self.model = Groq(api_key=os.environ["GROQ_API_KEY"])
+        self.model = Groq(api_key=os.environ["GROQ_API_KEY"], max_retries=MAX_RETRIES)
 
     def classify(self, df: pd.DataFrame) -> pd.DataFrame:
         """Rate all episodes in df (columns episode_hash, transcript_path, cleaned_path) in parallel.
