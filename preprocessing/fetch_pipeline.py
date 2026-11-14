@@ -1,22 +1,22 @@
 from filter_index import PodcastDatabase
 from extract_episodes import EpisodeFetcher
 import pandas as pd
-import numpy as np
 import hashlib
-
-YEARS = [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026]
-MIN_PODCAST_LEN_MINUTES = 15
-SEED = 23
+from config import YEARS, MIN_PODCAST_LEN_MINUTES, SEED
 
 class FetchPipeline():
+    """Builds the episode table for one group of podcasts: filter the index, fetch the episodes, add random ranks."""
     def __init__(self, pod_db: PodcastDatabase, ep_fetcher: EpisodeFetcher, group: str, filters: dict):
+        """group is the label written to the `group` column, filters are passed to PodcastDatabase.filter."""
         self.pod_db = pod_db
         self.ep_fetcher = ep_fetcher
-        self.rng = np.random.default_rng(SEED)
         self.group = group
         self.filters = filters
 
     def build_podcast_df(self, k: int, buffer: int) -> pd.DataFrame: # k corresponds to num podcasts per year
+        """Return one row per episode, sorted by podcast rank, year and episode rank.
+        Keeps episodes of at least MIN_PODCAST_LEN_MINUTES in YEARS, and only podcasts with at least buffer * k such episodes
+        in every year (k: episodes needed per podcast and year, buffer: reserve factor for episodes that fail later)."""
         try:
             feed_urls = self.pod_db.filter(filters=self.filters)
             print(f"Num podcasts found: {len(feed_urls)}")
@@ -39,15 +39,19 @@ class FetchPipeline():
         return df
 
     def __sort(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Sort by podcast rank, year and episode rank. The processing pipeline relies on this order."""
         return df.sort_values(by=["podcast_hash", "episode_year", "episode_hash"])
 
     def __add_hash_podcasts_rank(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Add the column podcast_hash, the random rank of the podcast."""
         df["podcast_hash"] = df["feed_url"].map(self.__rank)
         return df
 
     def __add_episode_hash_rank(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Add the column episode_hash, the random rank of the episode. It is also used as file name in all later stages."""
         df["episode_hash"] = df["episode_audio_url"].map(self.__rank)
         return df
 
     def __rank(self, key: str) -> str:
+        """Return the SHA256 hash of seed and key. Sorting by it gives a random order that is the same in every run."""
         return hashlib.sha256((f"{SEED}:{key}").encode("utf-8")).hexdigest()

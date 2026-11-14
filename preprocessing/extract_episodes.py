@@ -2,12 +2,16 @@ import feedparser
 from concurrent.futures import ThreadPoolExecutor
 
 class EpisodeFetcher():
+    """Reads podcast RSS feeds and returns one row per episode."""
     def fetch_episodes_for_podcasts(self, feed_urls, max_workers=16):
+        """Fetch all feeds in parallel and return the episodes of all podcasts as one list of dicts."""
         with ThreadPoolExecutor(max_workers=max_workers) as ex:
             rows = [r for result in ex.map(self.__fetch_episodes, feed_urls) for r in result]
         return rows
 
     def __fetch_episodes(self, feed_url):
+            """Return the episodes of one feed with title, year, audio URL and length in seconds.
+            Episodes without publication date or audio file are skipped. A feed that cannot be parsed gives an empty list."""
             try:
                 parsed = feedparser.parse(feed_url)
             except Exception:
@@ -26,6 +30,7 @@ class EpisodeFetcher():
             ]
 
     def __to_seconds(self, raw):
+        """Convert an itunes_duration value ("1:02:03", "45:30" or "3600") to seconds. Returns None if it is missing or invalid."""
         try:
             secs = 0
             for part in raw.split(":"):   # "1:02:03" -> 3723, "45:30" -> 2730, "3600" -> 3600

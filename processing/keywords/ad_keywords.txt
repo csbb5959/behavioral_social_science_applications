@@ -1,0 +1,211 @@
+# Ad cue phrases for rule-based ad removal (no LLM).
+#
+# Format: one phrase per line. Lines starting with "#" and empty lines are ignored.
+# Matching: lowercase the transcript, replace hyphens with spaces, drop punctuation
+# except apostrophes and "%", then search each phrase as a whole phrase
+# (not as a part of a longer word).
+#
+# Only multi-word phrases that rarely occur in normal conversation are listed.
+# Single generic words ("free", "sponsor", "offer", "deal", "save") are left out on purpose,
+# they would flag too much real content.
+# Brand names are left out on purpose: sponsors change over the years, so a brand list
+# would remove ads better in some years than in others.
+
+# --- Sponsor announcements ---
+brought to you by
+sponsored by
+is sponsored
+our sponsor
+our sponsors
+today's sponsor
+today's sponsors
+this week's sponsor
+sponsor of this
+sponsor of today's
+sponsor of the show
+sponsoring this
+sponsoring the show
+sponsoring today's
+this episode is supported by
+this podcast is supported by
+this show is supported by
+today's episode is supported by
+support for this podcast comes from
+support for this show comes from
+support for this episode comes from
+support for today's episode comes from
+support comes from
+made possible by
+presented by
+thanks to our sponsor
+thanks to our sponsors
+thank you to our sponsor
+thank you to our sponsors
+thank our sponsor
+thank our sponsors
+thanks to our friends at
+our friends at
+our partners at
+a word from our sponsor
+a word from our sponsors
+a message from our sponsor
+a message from our sponsors
+a quick word from
+hear from our sponsor
+hear from our sponsors
+word from our partners
+paid advertisement
+paid sponsorship
+paid partnership
+paid promotion
+
+# --- Promo codes ---
+promo code
+offer code
+coupon code
+discount code
+referral code
+use code
+use the code
+use my code
+use our code
+enter code
+enter the code
+with code
+with the code
+code at checkout
+at checkout
+
+# --- Offers and discounts ---
+percent off
+% off
+off your first
+your first order
+your first purchase
+your first month
+first month free
+free trial
+free shipping
+free gift
+money back guarantee
+risk free
+satisfaction guaranteed
+special offer
+exclusive offer
+limited time offer
+for a limited time
+limited time only
+exclusive discount
+special discount
+exclusive deal
+save up to
+no credit card required
+cancel anytime
+cancel any time
+try it free
+try it for free
+start your free
+claim your
+sign up today
+sign up now
+get started today
+order today
+order now
+
+# --- Calls to action and listener targeting ---
+dot com slash
+again that's
+once again that's
+check them out at
+check it out at
+learn more at
+find out more at
+sign up at
+get started at
+download the app
+let them know we sent you
+tell them we sent you
+let them know you heard
+heard about them from
+heard about them on
+support the show by
+supports the show
+helps support the show
+listeners of this show
+listeners of this podcast
+listeners of the show
+for our listeners
+just for our listeners
+exclusively for listeners
+exclusively for our listeners
+
+# --- Legal disclaimers (strong signal, almost never spoken outside ads) ---
+terms and conditions apply
+terms apply
+restrictions apply
+exclusions apply
+see site for details
+see website for details
+void where prohibited
+gambling problem
+must be 21 or older
+21 and older
+not available in all states
+eligibility restrictions apply
+results may vary
+member fdic
+equal housing lender
+subject to credit approval
+message and data rates may apply
+ask your doctor
+consult your doctor
+side effects may include
+these statements have not been evaluated
+
+# --- Ad break transitions (mark the borders of an ad block, not the ad itself) ---
+quick break
+short break
+take a break
+after the break
+after this break
+right after this
+we'll be right back
+we will be right back
+back after this
+don't go anywhere
+pay the bills
+pay some bills
+and now back to
+now back to the show
+back to the show
+back to the episode
+back to our conversation
+back to the interview
+
+# --- Self-promotion and cross-promotion (optional: delete this block to remove paid ads only) ---
+rate and review
+leave us a review
+leave a review
+five star review
+subscribe to the show
+subscribe to the podcast
+subscribe to our
+hit subscribe
+hit the subscribe
+follow us on
+follow the show
+support us on
+patreon
+become a patron
+become a member
+our newsletter
+our merch
+merch store
+buy me a coffee
+wherever you get your podcasts
+wherever you listen
+check out our other
+new podcast from
+from the makers of
+from the creators of
+on sale now

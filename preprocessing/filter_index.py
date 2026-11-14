@@ -1,19 +1,22 @@
 import sqlite3
-from time import timezone
 from datetime import datetime, timezone
 
-DATABASE_PATH = "data/podcastindex_feeds.db"
-
 class PodcastDatabase():
+    """Read access to the PodcastIndex SQLite dump (one table with one row per podcast feed)."""
     def __init__(self, db_path: str, table: str):
+        """Open the database at db_path and remember the table to query."""
         self._con = sqlite3.connect(db_path)
         self._cur = self._con.cursor()
         self._table = table
 
     def get_columns (self):
+        """Return the column definitions of the table."""
         return self._cur.execute(f"PRAGMA table_info({self._table})").fetchall()       
 
     def filter(self, filters: dict, limit=20) -> list:
+        """Return the feed URLs of at most `limit` podcasts that match all filters.
+        filters maps a column to its allowed values. newestItemPubdate and oldestItemPubdate take one year:
+        the newest episode must be after that year started, the oldest one before."""
         query = f"SELECT url FROM {self._table} WHERE 1=1"
         params = []
 
@@ -34,27 +37,28 @@ class PodcastDatabase():
         return self.__process_to_str_list(feed_url_tupels)
 
     def __date_to_utc_int(self, year: int, month=1, day=1) -> int:
+        """Convert a date to a Unix timestamp (UTC), the format used in the database."""
         dt = datetime(year=year, month=month, day=day, tzinfo=timezone.utc)
         return int(dt.timestamp())
 
     def __process_to_str_list(self, feed_url_tupels):
+        """Turn the one-element row tuples returned by SQLite into a list of strings."""
         return ["".join(feed) for feed in feed_url_tupels]
 
     def close(self):
+        """Close the database connection."""
         self._con.close()
 
 
 if __name__ == "__main__":
 
-    filters = {"language": ["en", "en-us"], 
-               "category1": ["games", "science"], 
-               "category2": ["hobbies", "medicine"], 
-               "category3": ["video games", "education"],
-               "newestItemPubdate": [2026],
-               "oldestItemPubdate": [2018],
-               "dead": ["0"]}
-    
-    pod_db = PodcastDatabase(DATABASE_PATH, table="podcasts")
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent)) # project root, where config.py is
+    from config import DATABASE_PATH, DATABASE_TABLE, GROUPS
+
+    filters = list(GROUPS.values())[0]
+    pod_db = PodcastDatabase(str(DATABASE_PATH), table=DATABASE_TABLE)
 
     filtered_pods = pod_db.filter(filters=filters, limit=10)
     pod_db.close()

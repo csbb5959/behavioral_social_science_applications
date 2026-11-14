@@ -9,12 +9,14 @@ from deepgram.core.api_error import ApiError
 from deepgram import (
     DeepgramClient,
 )
+from config import TRANSCRIPTION_MODEL
 
-TRANSCRIPTION_DIR = Path(__file__).resolve().parent.parent / "transcriptions"
 MAX_RETRIES = 2
 
 class EpisodeTranscriber():
+    """Transcribes audio files with Deepgram and saves the full JSON response per episode."""
     def __init__(self, out_dir: Path, max_workers: int=4):
+        """Create the output folder and the Deepgram client (DEEPGRAM_API_KEY from .env). max_workers is the number of parallel requests."""
         self.out_dir = out_dir
         self.max_workers = max_workers
         self.out_dir.mkdir(parents=True, exist_ok=True)
@@ -22,11 +24,15 @@ class EpisodeTranscriber():
         self.deepgram = DeepgramClient(api_key=os.getenv("DEEPGRAM_API_KEY"))
 
     def transcribe(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Transcribe all episodes in df (columns episode_hash, audio_path) in parallel.
+        Returns one row per episode with episode_hash, success, path and error."""
         with ThreadPoolExecutor(max_workers=self.max_workers) as ex:
             results = list(ex.map(self.transcribe_one, df["episode_hash"], df["audio_path"]))
             return pd.DataFrame(results, columns=["episode_hash", "success", "path", "error"])
 
     def transcribe_one(self, episode_hash: str, episode_path: Path):
+        """Transcribe one audio file, or reuse the transcript if it already exists.
+        The response is written to a .part file and renamed on success, so a finished file is always complete."""
         out = self.out_dir / f"{episode_hash}.json"
         if out.exists():
             return episode_hash, True, str(out), None
@@ -38,9 +44,10 @@ class EpisodeTranscriber():
                 response = self.deepgram.listen.v1.media.transcribe_file(
                     request=audio_file.read(),
                     request_options={"max_retries": MAX_RETRIES},
-                    model="nova-3",
+                    model=TRANSCRIPTION_MODEL,
                     filler_words=True, # Represents spoken language
                     diarize_model="v2", # Speaker seperation
+                    paragraphs=True, # Extract speaker timings
                     smart_format=True,
                 )
         
@@ -71,3 +78,20 @@ def load_transcript_text(path: str) -> str:
 def load_transcript_words(path: str) -> list:
     """Return all words as dicts with word, punctuated_word, start, end, confidence and speaker."""
     return _load_alternative(path)["words"]
+
+def load_transcript_sentences(path: str) -> list:
+    """Return the paragraphs as dicts with sentences (text, start, end), speaker, num_words, start and end."""
+    return _load_alternative(path)["paragraphs"]["paragraphs"]
+
+def word_stats(words: list) -> dict:
+    """Number of speakers, share of words spoken by the main speaker and mean word confidence."""
+    if not words:
+        return {"n_speakers": 0, "main_speaker_share": None, "mean_confidence": None}
+    words_per_speaker = {}
+    for word in words:
+        words_per_speaker[word["speaker"]] = words_per_speaker.get(word["speaker"], 0) + 1
+    return {
+        "n_speakers": len(words_per_speaker),
+        "main_speaker_share": max(words_per_speaker.values()) / len(words),
+        "mean_confidence": sum(word["confidence"] for word in words) / len(words),
+    }

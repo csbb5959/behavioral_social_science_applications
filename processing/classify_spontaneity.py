@@ -4,9 +4,9 @@ import logging
 import os, json
 from groq import Groq
 import dotenv
-from transcribe import load_transcript_words
+from remove_ads import load_cleaned_words
+from config import SPONTANEITY_MODEL, SCORE_THRESHOLD, EXCERPT_WORDS
 
-MODEL = "openai/gpt-oss-120b"
 PROMPT = """You get an excerpt from a podcast transcript.
 Each line is one speaker turn, labeled by automatic speaker diarization.
 Rate how spontaneous the speech is:
@@ -16,28 +16,32 @@ Rate how spontaneous the speech is:
 4 = clearly spontaneous (free conversation: hesitations, interruptions, self-corrections)
 First give a one-sentence reason, then the score.
 Answer only with JSON: {"reason": "...", "score": <1-4>}"""
-SCORE_THRESHOLD = 3     # scores below this count as scripted
-EXCERPT_WORDS = 300     # words per episode sent to the LLM for classification
 
 class SpontaneityClassifier():
+    """Rates with an LLM how spontaneous the speech of an episode is (score 1-4)."""
     def __init__(self, max_workers: int = 4, temperature: int=0):
+        """Create the Groq client (GROQ_API_KEY from .env). max_workers is the number of parallel requests."""
         self.max_workers = max_workers
         self.temperature = temperature
         dotenv.load_dotenv()
         self.model = Groq(api_key=os.environ["GROQ_API_KEY"])
 
     def classify(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Rate all episodes in df (columns episode_hash, transcript_path, cleaned_path) in parallel.
+        Returns one row per episode with episode_hash, success, score, scripted, scripted_reason, model and error."""
         with ThreadPoolExecutor(max_workers=self.max_workers) as ex:
-            results = list(ex.map(self.__classify_one, df["episode_hash"], df["transcript_path"]))
+            results = list(ex.map(self.__classify_one, df["episode_hash"], df["transcript_path"], df["cleaned_path"]))
         return pd.DataFrame(results, columns=["episode_hash", "success", "score", "scripted", "scripted_reason", "model", "error"])
 
-    def __classify_one(self, episode_hash: str, transcript_path: str):
+    def __classify_one(self, episode_hash: str, transcript_path: str, cleaned_path: str):
+        """Send the first EXCERPT_WORDS ad-free words of one episode to the LLM and read score and reason from its JSON answer.
+        scripted is True if the score is below SCORE_THRESHOLD."""
         try:
             logging.info(f"Starting spontaneity classification for {episode_hash}")
-            excerpt = build_excerpt(load_transcript_words(transcript_path), EXCERPT_WORDS)
+            excerpt = build_excerpt(load_cleaned_words(transcript_path, cleaned_path), EXCERPT_WORDS) # ad-free words
 
             response = self.model.chat.completions.create(
-                model=MODEL,
+                model=SPONTANEITY_MODEL,
                 temperature=self.temperature,
                 response_format={"type": "json_object"},
                 messages=[{"role": "system", "content": PROMPT},
